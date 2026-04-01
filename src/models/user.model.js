@@ -21,11 +21,9 @@ const userSchema = new mongoose.Schema({
     },
     profile_img: {
         type: String,
-        default: "https://ik.imagekit.io/fg9msl6pf/default_user.jpeg" 
         
     }
 })
 
-const userModel = mongoose.model("users",userSchema);
-
+const userModel = mongoose.model("users", userSchema);
 module.exports = userModel;
