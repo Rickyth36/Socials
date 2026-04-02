@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
 const authRouter = require("../routes/auth.routes");
-
+const bcrypt = require('bcryptjs');
 
 async function loginController (req, res){
   const { username, email, password } = req.body;
@@ -22,8 +22,11 @@ async function loginController (req, res){
       message: "User not found",
     });
   }
-  const hashed = crypto.createHash("sha256").update(password).digest("hex");
-  const isPasswordSame = user.password === hashed;
+  // const hashed = crypto.createHash("sha256").update(password).digest("hex");
+  // const isPasswordSame = user.password === hashed;
+
+  const isPasswordSame = await bcrypt.compare(password, user.password);
+
   if (!isPasswordSame) {
     return res.status(401).json({
       message: "Password invalid",
@@ -76,7 +79,9 @@ async function registerController (req, res) {
     });
   }
 
-  const hashed = crypto.createHash("sha256").update(password).digest("hex");
+  // const hashed = crypto.createHash("sha256").update(password).digest("hex");
+  const hashed = await bcrypt.hash(password, 10);
+
 
   const user = await userModel.create({
     username,
