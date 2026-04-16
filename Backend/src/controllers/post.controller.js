@@ -4,6 +4,7 @@ const ImageKit = require("@imagekit/nodejs");
 const { toFile } = require("@imagekit/nodejs");
 const jwt = require("jsonwebtoken");
 
+
 const imagekit = new ImageKit({
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
 });
@@ -11,15 +12,6 @@ const imagekit = new ImageKit({
 async function createPostController(req, res) {
   console.log(req.body, req.file);
 
-  const token = req.cookies.token;
-
-  if (!token) {
-    return res.status(401).json({
-      message: "Token not provided unauthorized access",
-    });
-  }
-
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
   const file = await imagekit.files.upload({
     file: await toFile(Buffer.from(req.file.buffer), "file"),
@@ -29,7 +21,7 @@ async function createPostController(req, res) {
   const post = await postModel.create({
     caption: req.body.caption,
     imgUrl: file.url,
-    user: decoded.id,
+    user: req.user.id,
     folder: "cohort2-insta-clone",
   });
 
@@ -40,17 +32,8 @@ async function createPostController(req, res) {
 }
 
 async function getPostController(req, res) {
-  const token = await req.cookies.token;
 
-  let decoded;
-  try {
-    decoded = await jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
-    return res.status(401).json({
-      message: "Token invalid",
-    });
-  }
-  const userId = decoded.id;
+  const userId = req.user.id;
   const posts = await postModel.find({
     user: userId,
   });
@@ -62,23 +45,8 @@ async function getPostController(req, res) {
 }
 
 async function getPostDetails(req, res) {
-  const token = req.cookies.token;
 
-  if (!token) {
-    return res.status(401).json({
-      message: "Unauthorized access",
-    });
-  }
-  let decoded;
-
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
-    return res.status(401).json({
-      message: "invalid token",
-    });
-  }
-  const userId = decoded.id;
+  const userId = req.user.id;
   const postId = req.params.postId;
 
   const post = await postModel.findById(postId);
